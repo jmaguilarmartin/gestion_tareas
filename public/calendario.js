@@ -134,7 +134,7 @@ function crearMesMini(mes, año) {
           `<span class="dia-dot ${act.estado.toLowerCase()}"></span>`).join('')}</div>`
       : '';
 
-    celdas += `<div class="calendar-dia-mini${esHoy ? ' hoy' : ''}"
+    celdas += `<div class="calendar-dia-mini${esHoy ? ' hoy' : ''}${actsDelDia.length > 0 ? ' con-actividad' : ''}"
                     onclick="irADia('${fechaStr}')"
                     title="${fechaStr}">${d}${dotsHTML}</div>`;
   }

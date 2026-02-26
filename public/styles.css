@@ -1002,6 +1002,15 @@ body {
   cursor: default;
 }
 
+.calendar-dia-mini.con-actividad {
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 3px;
+}
+
+.calendar-dia-mini.con-actividad:hover {
+  background: rgba(0, 0, 0, 0.13);
+}
+
 .dia-dots {
   display: flex;
   gap: 1px;
