@@ -222,7 +222,18 @@ function configurarEventListeners() {
   // Auto-rellenar fecha_fin y hora_fin con los valores de inicio
   document.getElementById('fecha_inicio').addEventListener('change', (e) => {
     const fechaFin = document.getElementById('fecha_fin');
-    if (!fechaFin.value) fechaFin.value = e.target.value;
+    const val = e.target.value;
+    const año = val ? parseInt(val.slice(0, 4), 10) : 0;
+    // Solo copiar cuando el año sea válido (el evento 'change' se dispara mientras
+    // el usuario escribe DD/MM/AAAA, antes de que el año esté completo el browser
+    // rellena con 0001, lo que causaría un año incorrecto y un error 500 en el backend)
+    if (año >= 2000) {
+      const finAño = fechaFin.value ? parseInt(fechaFin.value.slice(0, 4), 10) : 0;
+      // Copiar si fecha_fin está vacía O si tiene un año inválido de una copia prematura
+      if (!fechaFin.value || finAño < 2000) {
+        fechaFin.value = val;
+      }
+    }
   });
   document.getElementById('hora_inicio').addEventListener('change', (e) => {
     const horaFin = document.getElementById('hora_fin');
