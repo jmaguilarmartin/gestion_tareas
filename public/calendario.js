@@ -162,11 +162,11 @@ function crearMiniEvento(actividad) {
   const estadoClass = actividad.estado.toLowerCase();
   
   return `
-    <div class="calendar-mini-event ${estadoClass}" 
-         title="${actividad.titulo} - ${actividad.hora_inicio}">
+    <div class="calendar-mini-event ${estadoClass}"
+         title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}">
       <span class="event-status-badge ${estadoClass}"></span>
       <span class="event-time">${actividad.hora_inicio}</span>
-      <span class="event-title">${actividad.titulo}</span>
+      <span class="event-title">${actividad.tipo ? getTipoIcon(actividad.tipo) + ' ' : ''}${actividad.titulo}</span>
     </div>
   `;
 }
@@ -274,11 +274,9 @@ function crearTarjetaActividadDia(actividad) {
       
       <div class="actividad-info">
         <div class="actividad-info-item">
-          🕒 ${actividad.hora_inicio} - ${calcularHoraFin(actividad.hora_inicio, actividad.duracion_min)}
+          🕒 ${actividad.hora_inicio} – ${actividad.hora_fin || calcularHoraFin(actividad.hora_inicio, actividad.duracion_min)}
         </div>
-        <div class="actividad-info-item">
-          ⏱️ ${actividad.duracion_min} minutos
-        </div>
+        ${actividad.tipo ? `<div class="actividad-info-item">${getTipoIcon(actividad.tipo)} ${actividad.tipo}</div>` : ''}
       </div>
 
       <div class="actividad-descripcion">

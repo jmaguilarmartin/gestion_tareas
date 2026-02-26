@@ -79,25 +79,42 @@
       <form id="form-actividad" class="form-actividad">
         <div class="form-group">
           <label for="titulo">Título *</label>
-          <input type="text" id="titulo" name="titulo" required 
+          <input type="text" id="titulo" name="titulo" required
                  placeholder="Ej: Reunión de equipo">
+        </div>
+
+        <div class="form-group">
+          <label for="tipo">Tipo *</label>
+          <select id="tipo" name="tipo" required>
+            <option value="">-- Selecciona un tipo --</option>
+            <option value="Concierto">🎵 Concierto</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Comida/Cena">🍽️ Comida/Cena</option>
+            <option value="Teatro/Musical">🎭 Teatro/Musical</option>
+          </select>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="fecha_inicio">Fecha *</label>
+            <label for="fecha_inicio">Fecha inicio *</label>
             <input type="date" id="fecha_inicio" name="fecha_inicio" required>
           </div>
 
           <div class="form-group">
-            <label for="hora_inicio">Hora *</label>
+            <label for="hora_inicio">Hora inicio *</label>
             <input type="time" id="hora_inicio" name="hora_inicio" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha_fin">Fecha fin</label>
+            <input type="date" id="fecha_fin" name="fecha_fin">
           </div>
 
           <div class="form-group">
-            <label for="duracion_min">Duración (min) *</label>
-            <input type="number" id="duracion_min" name="duracion_min" 
-                   min="15" step="15" value="60" required>
+            <label for="hora_fin">Hora fin</label>
+            <input type="time" id="hora_fin" name="hora_fin">
           </div>
         </div>
 
@@ -178,18 +195,36 @@
           <input type="text" id="edit-titulo" required>
         </div>
 
+        <div class="form-group">
+          <label for="edit-tipo">Tipo</label>
+          <select id="edit-tipo">
+            <option value="">-- Sin tipo --</option>
+            <option value="Concierto">🎵 Concierto</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Comida/Cena">🍽️ Comida/Cena</option>
+            <option value="Teatro/Musical">🎭 Teatro/Musical</option>
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label for="edit-fecha">Fecha</label>
+            <label for="edit-fecha">Fecha inicio</label>
             <input type="date" id="edit-fecha" required>
           </div>
           <div class="form-group">
-            <label for="edit-hora">Hora</label>
+            <label for="edit-hora">Hora inicio</label>
             <input type="time" id="edit-hora" required>
           </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="edit-duracion">Duración (min)</label>
-            <input type="number" id="edit-duracion" min="15" step="15" required>
+            <label for="edit-fecha-fin">Fecha fin</label>
+            <input type="date" id="edit-fecha-fin">
+          </div>
+          <div class="form-group">
+            <label for="edit-hora-fin">Hora fin</label>
+            <input type="time" id="edit-hora-fin">
           </div>
         </div>
 

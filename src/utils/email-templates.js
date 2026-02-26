@@ -24,12 +24,12 @@ function crearEmailNuevaActividad(actividad, destinatario) {
           
           <div class="details">
             <p><span class="label">Título:</span> ${actividad.titulo}</p>
-            <p><span class="label">Fecha:</span> ${actividad.fecha_inicio}</p>
-            <p><span class="label">Hora:</span> ${actividad.hora_inicio}</p>
-            <p><span class="label">Duración:</span> ${actividad.duracion_min} minutos</p>
+            ${actividad.tipo ? `<p><span class="label">Tipo:</span> ${actividad.tipo}</p>` : ''}
+            <p><span class="label">Inicio:</span> ${actividad.fecha_inicio} a las ${actividad.hora_inicio}</p>
+            <p><span class="label">Fin:</span> ${actividad.fecha_fin || actividad.fecha_inicio} a las ${actividad.hora_fin || actividad.hora_inicio}</p>
             <p><span class="label">Descripción:</span> ${actividad.descripcion}</p>
           </div>
-          
+
           <p>Por favor, confirma tu asistencia y agenda esta actividad.</p>
         </div>
         <div class="footer">
@@ -71,9 +71,9 @@ function crearEmailModificacion(actividad, destinatario) {
           
           <div class="details">
             <p><span class="label">Título:</span> ${actividad.titulo}</p>
-            <p><span class="label">Nueva Fecha:</span> ${actividad.fecha_inicio}</p>
-            <p><span class="label">Nueva Hora:</span> ${actividad.hora_inicio}</p>
-            <p><span class="label">Duración:</span> ${actividad.duracion_min} minutos</p>
+            ${actividad.tipo ? `<p><span class="label">Tipo:</span> ${actividad.tipo}</p>` : ''}
+            <p><span class="label">Nuevo inicio:</span> ${actividad.fecha_inicio} a las ${actividad.hora_inicio}</p>
+            <p><span class="label">Nuevo fin:</span> ${actividad.fecha_fin || actividad.fecha_inicio} a las ${actividad.hora_fin || actividad.hora_inicio}</p>
             <p><span class="label">Descripción:</span> ${actividad.descripcion}</p>
           </div>
           
@@ -118,8 +118,8 @@ function crearEmailCancelacion(actividad, destinatario) {
           
           <div class="details">
             <p><span class="label">Título:</span> ${actividad.titulo}</p>
-            <p><span class="label">Fecha:</span> ${actividad.fecha_inicio}</p>
-            <p><span class="label">Hora:</span> ${actividad.hora_inicio}</p>
+            ${actividad.tipo ? `<p><span class="label">Tipo:</span> ${actividad.tipo}</p>` : ''}
+            <p><span class="label">Inicio:</span> ${actividad.fecha_inicio} a las ${actividad.hora_inicio}</p>
           </div>
           
           <p>Por favor, elimina esta actividad de tu agenda.</p>

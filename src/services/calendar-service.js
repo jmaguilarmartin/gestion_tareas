@@ -7,7 +7,9 @@ class CalendarService {
   async crearEvento(actividad) {
     const fechaHora = `${actividad.fecha_inicio}T${actividad.hora_inicio}:00`;
     const fechaInicio = new Date(fechaHora);
-    const fechaFin = new Date(fechaInicio.getTime() + actividad.duracion_min * 60000);
+    const fechaFin = actividad.fecha_fin && actividad.hora_fin
+      ? new Date(`${actividad.fecha_fin}T${actividad.hora_fin}:00`)
+      : new Date(fechaInicio.getTime() + (actividad.duracion_min || 60) * 60000);
 
     const evento = {
       summary: actividad.titulo,
@@ -54,7 +56,9 @@ class CalendarService {
   async actualizarEvento(eventId, actividad) {
     const fechaHora = `${actividad.fecha_inicio}T${actividad.hora_inicio}:00`;
     const fechaInicio = new Date(fechaHora);
-    const fechaFin = new Date(fechaInicio.getTime() + actividad.duracion_min * 60000);
+    const fechaFin = actividad.fecha_fin && actividad.hora_fin
+      ? new Date(`${actividad.fecha_fin}T${actividad.hora_fin}:00`)
+      : new Date(fechaInicio.getTime() + (actividad.duracion_min || 60) * 60000);
 
     const evento = {
       summary: actividad.titulo,

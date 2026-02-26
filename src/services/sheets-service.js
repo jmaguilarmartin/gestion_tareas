@@ -10,18 +10,21 @@ class SheetsService {
       actividad.titulo,
       actividad.fecha_inicio,
       actividad.hora_inicio,
-      actividad.duracion_min,
+      actividad.duracion_min || 0,
       actividad.participantes.join(', '),
       actividad.descripcion,
       'Activa',
       '',
       actividad.creado_por,
-      new Date().toISOString()
+      new Date().toISOString(),
+      actividad.fecha_fin || actividad.fecha_inicio,
+      actividad.hora_fin || actividad.hora_inicio,
+      actividad.tipo || ''
     ]];
 
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Actividades!A:K',
+      range: 'Actividades!A:N',
       valueInputOption: 'USER_ENTERED',
       resource: { values }
     });
@@ -36,7 +39,7 @@ class SheetsService {
   async listarActividades() {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Actividades!A2:K'
+      range: 'Actividades!A2:N'
     });
 
     const rows = response.data.values || [];
@@ -51,7 +54,10 @@ class SheetsService {
       estado: row[7],
       eventId: row[8],
       creado_por: row[9],
-      fecha_creacion: row[10]
+      fecha_creacion: row[10],
+      fecha_fin: row[11] || row[2],
+      hora_fin: row[12] || row[3],
+      tipo: row[13] || ''
     }));
   }
 
@@ -73,16 +79,19 @@ class SheetsService {
       datos.hora_inicio || actividad.hora_inicio,
       datos.duracion_min || actividad.duracion_min,
       datos.participantes ? datos.participantes.join(', ') : actividad.participantes.join(', '),
-      datos.descripcion || actividad.descripcion,
+      datos.descripcion !== undefined ? datos.descripcion : actividad.descripcion,
       datos.estado || actividad.estado,
       actividad.eventId,
       actividad.creado_por,
-      actividad.fecha_creacion
+      actividad.fecha_creacion,
+      datos.fecha_fin || actividad.fecha_fin || actividad.fecha_inicio,
+      datos.hora_fin || actividad.hora_fin || actividad.hora_inicio,
+      datos.tipo !== undefined ? datos.tipo : (actividad.tipo || '')
     ]];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `Actividades!A${rowNumber}:K${rowNumber}`,
+      range: `Actividades!A${rowNumber}:N${rowNumber}`,
       valueInputOption: 'USER_ENTERED',
       resource: { values }
     });

@@ -146,6 +146,18 @@ window.cerrarSesion = cerrarSesion;
 // API Base URL
 const API_BASE = '/.netlify/functions';
 
+const TIPO_ICONOS = {
+  'Concierto': '🎵',
+  'Viaje': '✈️',
+  'Comida/Cena': '🍽️',
+  'Teatro/Musical': '🎭'
+};
+
+function getTipoIcon(tipo) {
+  return TIPO_ICONOS[tipo] || '📌';
+}
+window.getTipoIcon = getTipoIcon;
+
 // Estado global
 let actividades = [];
 let personas = [];
@@ -206,6 +218,16 @@ function configurarEventListeners() {
 
   // Formulario crear actividad
   document.getElementById('form-actividad').addEventListener('submit', crearActividad);
+
+  // Auto-rellenar fecha_fin y hora_fin con los valores de inicio
+  document.getElementById('fecha_inicio').addEventListener('change', (e) => {
+    const fechaFin = document.getElementById('fecha_fin');
+    if (!fechaFin.value) fechaFin.value = e.target.value;
+  });
+  document.getElementById('hora_inicio').addEventListener('change', (e) => {
+    const horaFin = document.getElementById('hora_fin');
+    if (!horaFin.value) horaFin.value = e.target.value;
+  });
 
   // Formulario editar actividad
   document.getElementById('form-editar-actividad').addEventListener('submit', actualizarActividad);
@@ -347,20 +369,26 @@ function crearActividadCard(actividad) {
     `;
   }
 
+  const horaFin = actividad.hora_fin || actividad.hora_inicio;
+  const fechaFinMostrar = actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio
+    ? ` – ${formatearFecha(actividad.fecha_fin)}`
+    : '';
+
   card.innerHTML = `
     <div class="actividad-header">
       <div>
         <div class="actividad-titulo">${actividad.titulo}</div>
         <span class="actividad-estado ${actividad.estado.toLowerCase()}">${actividad.estado}</span>
+        ${actividad.tipo ? `<span class="actividad-estado" style="background:#6c757d;color:#fff;margin-left:4px;">${getTipoIcon(actividad.tipo)} ${actividad.tipo}</span>` : ''}
       </div>
     </div>
 
     <div class="actividad-info">
       <div class="actividad-info-item">
-        📅 ${formatearFecha(actividad.fecha_inicio)}
+        📅 ${formatearFecha(actividad.fecha_inicio)}${fechaFinMostrar}
       </div>
       <div class="actividad-info-item">
-        🕒 ${actividad.hora_inicio} (${actividad.duracion_min} min)
+        🕒 ${actividad.hora_inicio} – ${horaFin}
       </div>
     </div>
 
@@ -401,12 +429,14 @@ async function crearActividad(e) {
 
   const actividad = {
     titulo: formData.get('titulo'),
+    tipo: formData.get('tipo'),
     fecha_inicio: formData.get('fecha_inicio'),
     hora_inicio: formData.get('hora_inicio'),
-    duracion_min: parseInt(formData.get('duracion_min')),
+    fecha_fin: formData.get('fecha_fin') || formData.get('fecha_inicio'),
+    hora_fin: formData.get('hora_fin') || formData.get('hora_inicio'),
     descripcion: formData.get('descripcion'),
     participantes: participantesSeleccionados,
-    creado_por: usuario.email // ← USAR EMAIL DE LA SESIÓN
+    creado_por: usuario.email
   };
 
   try {
@@ -453,12 +483,16 @@ async function actualizarActividad(e) {
     document.querySelectorAll('input[name="edit-participantes"]:checked')
   ).map(input => input.value);
 
+  const fechaInicio = document.getElementById('edit-fecha').value;
+  const horaInicio = document.getElementById('edit-hora').value;
   const datos = {
     id: id,
     titulo: document.getElementById('edit-titulo').value,
-    fecha_inicio: document.getElementById('edit-fecha').value,
-    hora_inicio: document.getElementById('edit-hora').value,
-    duracion_min: parseInt(document.getElementById('edit-duracion').value),
+    tipo: document.getElementById('edit-tipo').value,
+    fecha_inicio: fechaInicio,
+    hora_inicio: horaInicio,
+    fecha_fin: document.getElementById('edit-fecha-fin').value || fechaInicio,
+    hora_fin: document.getElementById('edit-hora-fin').value || horaInicio,
     descripcion: document.getElementById('edit-descripcion').value,
     estado: document.getElementById('edit-estado').value,
     participantes: participantesSeleccionados
@@ -577,9 +611,11 @@ function abrirEditarActividad(id) {
 
   document.getElementById('edit-id').value = actividad.id;
   document.getElementById('edit-titulo').value = actividad.titulo;
+  document.getElementById('edit-tipo').value = actividad.tipo || '';
   document.getElementById('edit-fecha').value = actividad.fecha_inicio;
   document.getElementById('edit-hora').value = actividad.hora_inicio;
-  document.getElementById('edit-duracion').value = actividad.duracion_min;
+  document.getElementById('edit-fecha-fin').value = actividad.fecha_fin || actividad.fecha_inicio;
+  document.getElementById('edit-hora-fin').value = actividad.hora_fin || actividad.hora_inicio;
   document.getElementById('edit-descripcion').value = actividad.descripcion;
   document.getElementById('edit-estado').value = actividad.estado;
 
@@ -621,9 +657,9 @@ function verDetalles(id) {
 
   alert(`
 Título: ${actividad.titulo}
-Fecha: ${actividad.fecha_inicio}
-Hora: ${actividad.hora_inicio}
-Duración: ${actividad.duracion_min} minutos
+Tipo: ${actividad.tipo ? getTipoIcon(actividad.tipo) + ' ' + actividad.tipo : 'Sin tipo'}
+Inicio: ${actividad.fecha_inicio} a las ${actividad.hora_inicio}
+Fin: ${actividad.fecha_fin || actividad.fecha_inicio} a las ${actividad.hora_fin || actividad.hora_inicio}
 Estado: ${actividad.estado}
 Descripción: ${actividad.descripcion}
 Participantes: ${actividad.participantes.join(', ')}
