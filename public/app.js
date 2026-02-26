@@ -605,6 +605,34 @@ async function cancelarActividadDirecto(id) {
   }
 }
 
+async function eliminarActividad(id) {
+  if (!confirm('¿Eliminar esta actividad definitivamente? Esta acción no se puede deshacer.')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/actividades-eliminar`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error);
+    }
+
+    mostrarMensaje('success', 'Actividad eliminada exitosamente');
+    cerrarModales();
+    await cargarActividades();
+
+  } catch (error) {
+    console.error('Error:', error);
+    mostrarMensaje('error', 'Error al eliminar: ' + error.message);
+  }
+}
+
 function abrirEditarActividad(id) {
   const actividad = actividades.find(a => a.id === id);
   if (!actividad) return;
@@ -976,6 +1004,7 @@ window.verDetalles = verDetalles;
 window.resetForm = resetForm;
 window.completarActividadDirecto = completarActividadDirecto;
 window.cancelarActividadDirecto = cancelarActividadDirecto;
+window.eliminarActividad = eliminarActividad;
 window.editarPersona = editarPersona;
 window.eliminarPersona = eliminarPersona;
 window.renderizarParticipantesEdicion = renderizarParticipantesEdicion;

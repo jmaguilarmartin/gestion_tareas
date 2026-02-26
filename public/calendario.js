@@ -179,17 +179,25 @@ function crearMiniEvento(actividad, posicion = 'unico') {
        <span class="event-time">${actividad.hora_inicio}</span>`;
 
   const tooltipFechas = actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio
-    ? ` (${actividad.fecha_inicio} – ${actividad.fecha_fin})`
+    ? ` (${formatearFechaCorta(actividad.fecha_inicio)} – ${formatearFechaCorta(actividad.fecha_fin)})`
     : '';
 
   return `
     <div class="calendar-mini-event ${estadoClass}${esContinuacion ? ' event-continuation' : ''}"
-         title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}${tooltipFechas}">
+         title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}${tooltipFechas}"
+         onclick="abrirEditarActividad('${actividad.id}'); event.stopPropagation();"
+         style="cursor:pointer;">
       ${leftContent}
       <span class="event-title">${actividad.tipo ? getTipoIcon(actividad.tipo) + ' ' : ''}${actividad.titulo}</span>
     </div>
   `;
 }
+function formatearFechaCorta(fechaISO) {
+  if (!fechaISO) return '';
+  const [año, mes, dia] = fechaISO.split('-');
+  return `${dia}/${mes}/${año}`;
+}
+
 function formatearFechaISO(fecha) {
   const año = fecha.getFullYear();
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -270,11 +278,17 @@ function crearTarjetaActividadDia(actividad) {
       <button class="btn btn-danger btn-small" onclick="cancelarActividadDirecto('${actividad.id}')">
         ❌ Cancelar
       </button>
+      <button class="btn btn-danger btn-small" onclick="eliminarActividad('${actividad.id}')">
+        🗑️ Eliminar
+      </button>
     `;
   } else {
     botonesAccion = `
       <button class="btn btn-secondary btn-small" onclick="verDetalles('${actividad.id}')">
         👁️ Ver detalles
+      </button>
+      <button class="btn btn-danger btn-small" onclick="eliminarActividad('${actividad.id}')">
+        🗑️ Eliminar
       </button>
     `;
   }
@@ -293,7 +307,7 @@ function crearTarjetaActividadDia(actividad) {
       <div class="actividad-info">
         ${actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio ? `
         <div class="actividad-info-item">
-          📅 ${formatearFecha(actividad.fecha_inicio)} – ${formatearFecha(actividad.fecha_fin)}
+          📅 ${formatearFechaCorta(actividad.fecha_inicio)} – ${formatearFechaCorta(actividad.fecha_fin)}
         </div>` : ''}
         <div class="actividad-info-item">
           🕒 ${actividad.hora_inicio} – ${actividad.hora_fin || calcularHoraFin(actividad.hora_inicio, actividad.duracion_min)}

@@ -146,6 +146,42 @@ class SheetsService {
     }));
   }
 
+  async eliminarActividad(id) {
+    const actividades = await this.listarActividades();
+    const index = actividades.findIndex(act => act.id === id);
+
+    if (index === -1) {
+      throw new Error('Actividad no encontrada');
+    }
+
+    const actividad = actividades[index];
+    const rowNumber = index + 2;
+
+    const metaResponse = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID
+    });
+    const sheet = metaResponse.data.sheets.find(s => s.properties.title === 'Actividades');
+    const sheetId = sheet ? sheet.properties.sheetId : 0;
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: 'ROWS',
+              startIndex: rowNumber - 1,
+              endIndex: rowNumber
+            }
+          }
+        }]
+      }
+    });
+
+    return actividad;
+  }
+
   generarId() {
     return 'ACT_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
