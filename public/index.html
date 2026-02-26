@@ -150,6 +150,10 @@
       <div class="section-header">
         <h2>Vista de Calendario</h2>
         <div class="calendar-controls">
+          <div class="calendar-vista-toggle">
+            <button id="btn-vista-mensual" class="btn btn-secondary active" onclick="cambiarVista('mensual')">Mes</button>
+            <button id="btn-vista-anual" class="btn btn-secondary" onclick="cambiarVista('anual')">Año</button>
+          </div>
           <button id="btn-prev-month" class="btn btn-icon">◀</button>
           <span id="current-month" class="current-month"></span>
           <button id="btn-next-month" class="btn btn-icon">▶</button>

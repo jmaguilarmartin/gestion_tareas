@@ -803,6 +803,23 @@ body {
   margin-right: 2px;
 }
 
+/* Último día de evento multidia — mismo aspecto que el primero + borde derecho */
+.calendar-mini-event.event-end {
+  border-right: 3px solid;
+}
+
+.calendar-mini-event.event-end.activa {
+  border-right-color: var(--secondary-color);
+}
+
+.calendar-mini-event.event-end.completada {
+  border-right-color: #2196f3;
+}
+
+.calendar-mini-event.event-end.cancelada {
+  border-right-color: var(--danger-color);
+}
+
 .event-status-badge {
   width: 8px;
   height: 8px;
@@ -886,6 +903,132 @@ body {
   background: rgba(0, 0, 0, 0.3);
 }
 
+/* ─── Toggle de vista Mes / Año ───────────────────────────────────────── */
+.calendar-vista-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.calendar-vista-toggle .btn {
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.calendar-vista-toggle .btn.active {
+  background: var(--card-bg);
+  color: var(--primary-color);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Calendario Anual ────────────────────────────────────────────────── */
+.calendar-anual-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.calendar-mes-mini {
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 12px 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  border: 1px solid var(--border-color);
+}
+
+.calendar-mes-mini-header {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.calendar-mes-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.mini-header-dia {
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 2px 0 4px;
+}
+
+.calendar-dia-mini {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 0.62rem;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 2px 1px 1px;
+  line-height: 1.2;
+  transition: background 0.15s ease;
+}
+
+.calendar-dia-mini:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.calendar-dia-mini.hoy {
+  background: var(--primary-color);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.calendar-dia-mini.hoy:hover {
+  background: var(--primary-dark, var(--primary-color));
+}
+
+.calendar-dia-mini.vacio {
+  cursor: default;
+}
+
+.dia-dots {
+  display: flex;
+  gap: 1px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.dia-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dia-dot.activa {
+  background: var(--secondary-color);
+}
+
+.dia-dot.completada {
+  background: #2196f3;
+}
+
+.dia-dot.cancelada {
+  background: var(--danger-color);
+}
+
 /* Responsive para calendario */
 @media (max-width: 768px) {
   .calendar-day {
@@ -903,5 +1046,16 @@ body {
   
   .calendar-day-number {
     font-size: 0.8rem;
+  }
+
+  .calendar-anual-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-anual-grid {
+    grid-template-columns: 1fr;
   }
 }

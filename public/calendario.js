@@ -1,12 +1,24 @@
 // Estado del calendario
 let calendarioFecha = new Date();
 let actividadesDelMes = [];
+let vistaCalendario = 'mensual';
 
 // Inicializar calendario
 function inicializarCalendario() {
   configurarEventosCalendario();
   renderizarCalendario();
   cargarActividadesDelMes();
+}
+
+function cambiarVista(vista) {
+  vistaCalendario = vista;
+  document.getElementById('btn-vista-mensual').classList.toggle('active', vista === 'mensual');
+  document.getElementById('btn-vista-anual').classList.toggle('active', vista === 'anual');
+  // En vista anual se oculta el panel de eventos del día
+  const panelEventos = document.getElementById('calendar-events');
+  if (panelEventos) panelEventos.style.display = vista === 'mensual' ? '' : 'none';
+  renderizarCalendario();
+  if (vista === 'mensual') cargarActividadesDelMes();
 }
 
 function configurarEventosCalendario() {
@@ -18,45 +30,58 @@ function configurarEventosCalendario() {
   const newBtnPrev = btnPrev.cloneNode(true);
   const newBtnNext = btnNext.cloneNode(true);
   const newBtnToday = btnToday.cloneNode(true);
-  
+
   btnPrev.parentNode.replaceChild(newBtnPrev, btnPrev);
   btnNext.parentNode.replaceChild(newBtnNext, btnNext);
   btnToday.parentNode.replaceChild(newBtnToday, btnToday);
 
   newBtnPrev.addEventListener('click', () => {
-    calendarioFecha.setMonth(calendarioFecha.getMonth() - 1);
+    if (vistaCalendario === 'anual') {
+      calendarioFecha.setFullYear(calendarioFecha.getFullYear() - 1);
+    } else {
+      calendarioFecha.setMonth(calendarioFecha.getMonth() - 1);
+    }
     renderizarCalendario();
-    cargarActividadesDelMes();
+    if (vistaCalendario === 'mensual') cargarActividadesDelMes();
   });
 
   newBtnNext.addEventListener('click', () => {
-    calendarioFecha.setMonth(calendarioFecha.getMonth() + 1);
+    if (vistaCalendario === 'anual') {
+      calendarioFecha.setFullYear(calendarioFecha.getFullYear() + 1);
+    } else {
+      calendarioFecha.setMonth(calendarioFecha.getMonth() + 1);
+    }
     renderizarCalendario();
-    cargarActividadesDelMes();
+    if (vistaCalendario === 'mensual') cargarActividadesDelMes();
   });
 
   newBtnToday.addEventListener('click', () => {
     calendarioFecha = new Date();
     renderizarCalendario();
-    cargarActividadesDelMes();
+    if (vistaCalendario === 'mensual') cargarActividadesDelMes();
   });
 }
 
 function renderizarCalendario() {
+  if (vistaCalendario === 'anual') {
+    renderizarCalendarioAnual();
+    return;
+  }
+
   const mes = calendarioFecha.getMonth();
   const año = calendarioFecha.getFullYear();
 
   // Actualizar título del mes
-  const nombreMes = calendarioFecha.toLocaleDateString('es-ES', { 
-    month: 'long', 
-    year: 'numeric' 
+  const nombreMes = calendarioFecha.toLocaleDateString('es-ES', {
+    month: 'long',
+    year: 'numeric'
   });
-  document.getElementById('current-month').textContent = 
+  document.getElementById('current-month').textContent =
     nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
 
   // Crear grid del calendario
   const calendarView = document.getElementById('calendar-view');
-  
+
   const calendarHTML = `
     <div class="calendar-grid">
       ${crearHeaderDias()}
@@ -65,6 +90,70 @@ function renderizarCalendario() {
   `;
 
   calendarView.innerHTML = calendarHTML;
+}
+
+function renderizarCalendarioAnual() {
+  const año = calendarioFecha.getFullYear();
+  document.getElementById('current-month').textContent = String(año);
+
+  const mesesHTML = [];
+  for (let m = 0; m < 12; m++) {
+    mesesHTML.push(crearMesMini(m, año));
+  }
+
+  const calendarView = document.getElementById('calendar-view');
+  calendarView.innerHTML = `<div class="calendar-anual-grid">${mesesHTML.join('')}</div>`;
+}
+
+function crearMesMini(mes, año) {
+  const nombreMes = new Date(año, mes, 1).toLocaleDateString('es-ES', { month: 'long' });
+  const titulo = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+
+  const diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  const headersHTML = diasSemana.map(d => `<div class="mini-header-dia">${d}</div>`).join('');
+
+  const primerDia = new Date(año, mes, 1);
+  const offsetInicio = (primerDia.getDay() + 6) % 7; // lunes = 0
+  const diasEnMes = new Date(año, mes + 1, 0).getDate();
+
+  const hoyString = formatearFechaISO(new Date());
+
+  let celdas = '';
+  for (let i = 0; i < offsetInicio; i++) {
+    celdas += `<div class="calendar-dia-mini vacio"></div>`;
+  }
+
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fecha = new Date(año, mes, d);
+    const fechaStr = formatearFechaISO(fecha);
+    const esHoy = fechaStr === hoyString;
+
+    const actsDelDia = actividades.filter(act => actividadOcupaDia(act, fechaStr));
+    const dotsHTML = actsDelDia.length > 0
+      ? `<div class="dia-dots">${actsDelDia.slice(0, 3).map(act =>
+          `<span class="dia-dot ${act.estado.toLowerCase()}"></span>`).join('')}</div>`
+      : '';
+
+    celdas += `<div class="calendar-dia-mini${esHoy ? ' hoy' : ''}"
+                    onclick="irADia('${fechaStr}')"
+                    title="${fechaStr}">${d}${dotsHTML}</div>`;
+  }
+
+  return `
+    <div class="calendar-mes-mini">
+      <div class="calendar-mes-mini-header">${titulo}</div>
+      <div class="calendar-mes-mini-grid">
+        ${headersHTML}
+        ${celdas}
+      </div>
+    </div>
+  `;
+}
+
+function irADia(fechaStr) {
+  calendarioFecha = new Date(fechaStr + 'T00:00:00');
+  cambiarVista('mensual');
+  setTimeout(() => seleccionarDia(fechaStr), 50);
 }
 
 function crearHeaderDias() {
@@ -171,7 +260,8 @@ function crearCeldaDia(dia, mes, año, otroMes) {
 
 function crearMiniEvento(actividad, posicion = 'unico') {
   const estadoClass = actividad.estado.toLowerCase();
-  const esContinuacion = posicion === 'medio' || posicion === 'fin';
+  const esContinuacion = posicion === 'medio';
+  const esUltimoDia = posicion === 'fin';
 
   const leftContent = esContinuacion
     ? `<span class="event-cont-arrow">›</span>`
@@ -182,8 +272,10 @@ function crearMiniEvento(actividad, posicion = 'unico') {
     ? ` (${formatearFechaCorta(actividad.fecha_inicio)} – ${formatearFechaCorta(actividad.fecha_fin)})`
     : '';
 
+  const extraClass = esContinuacion ? ' event-continuation' : esUltimoDia ? ' event-end' : '';
+
   return `
-    <div class="calendar-mini-event ${estadoClass}${esContinuacion ? ' event-continuation' : ''}"
+    <div class="calendar-mini-event ${estadoClass}${extraClass}"
          title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}${tooltipFechas}"
          onclick="abrirEditarActividad('${actividad.id}'); event.stopPropagation();"
          style="cursor:pointer;">
@@ -343,5 +435,7 @@ function calcularHoraFin(horaInicio, duracionMin) {
 // Exponer funciones globales
 window.inicializarCalendario = inicializarCalendario;
 window.seleccionarDia = seleccionarDia;
+window.cambiarVista = cambiarVista;
+window.irADia = irADia;
 // Exponer función para crear mini eventos
 window.crearMiniEvento = crearMiniEvento;
