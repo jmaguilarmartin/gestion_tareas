@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestión de Actividades</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>📅 Sistema de Gestión de Actividades</h1>
+          <p>JMA Consultores</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="text-align: right; color: white;">
+            <div style="font-weight: 600;" id="user-name">Usuario</div>
+            <div style="font-size: 0.9rem; opacity: 0.9; display: flex; align-items: center; gap: 5px;">
+              <span id="user-email">email@example.com</span>
+              <span id="session-type" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(255,255,255,0.2); border-radius: 10px;"></span>
+            </div>
+          </div>
+          <button onclick="cerrarSesion()" class="btn btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white;">
+            🚪 Salir
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="nueva-actividad">Nueva Actividad</button>
+      <button class="tab-btn" data-tab="calendario">Calendario</button>
+      <button class="tab-btn" data-tab="personas">Personas</button>
+    </nav>
+
+    <!-- Tab: Dashboard -->
+    <div id="dashboard" class="tab-content active">
+      <div class="section-header">
+        <h2>Actividades Programadas</h2>
+        <div class="filters">
+          <select id="filter-estado">
+            <option value="">Todos los estados</option>
+            <option value="Activa">Activas</option>
+            <option value="Completada">Completadas</option>
+            <option value="Cancelada">Canceladas</option>
+          </select>
+          <button id="btn-refresh" class="btn btn-secondary">🔄 Actualizar</button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Cargando actividades...</p>
+      </div>
+
+      <div id="actividades-list" class="actividades-grid">
+        <!-- Las actividades se cargarán aquí dinámicamente -->
+      </div>
+
+      <div id="no-actividades" class="empty-state" style="display: none;">
+        <p>📭 No hay actividades programadas</p>
+        <button class="btn btn-primary" onclick="mostrarTab('nueva-actividad')">
+          Crear Primera Actividad
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab: Nueva Actividad -->
+    <div id="nueva-actividad" class="tab-content">
+      <div class="section-header">
+        <h2>Crear Nueva Actividad</h2>
+      </div>
+
+      <form id="form-actividad" class="form-actividad">
+        <div class="form-group">
+          <label for="titulo">Título *</label>
+          <input type="text" id="titulo" name="titulo" required 
+                 placeholder="Ej: Reunión de equipo">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha_inicio">Fecha *</label>
+            <input type="date" id="fecha_inicio" name="fecha_inicio" required>
+          </div>
+
+          <div class="form-group">
+            <label for="hora_inicio">Hora *</label>
+            <input type="time" id="hora_inicio" name="hora_inicio" required>
+          </div>
+
+          <div class="form-group">
+            <label for="duracion_min">Duración (min) *</label>
+            <input type="number" id="duracion_min" name="duracion_min" 
+                   min="15" step="15" value="60" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea id="descripcion" name="descripcion" rows="4"
+                    placeholder="Detalles de la actividad..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Participantes *</label>
+          <div id="participantes-container" class="participantes-container">
+            <!-- Los participantes se cargarán aquí -->
+          </div>
+          <p class="help-text">Selecciona los participantes que recibirán notificación</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            ✅ Crear Actividad
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            🔄 Limpiar
+          </button>
+        </div>
+
+        <div id="form-message" class="form-message"></div>
+      </form>
+    </div>
+
+    <!-- Tab: Calendario -->
+    <div id="calendario" class="tab-content">
+      <div class="section-header">
+        <h2>Vista de Calendario</h2>
+        <div class="calendar-controls">
+          <button id="btn-prev-month" class="btn btn-icon">◀</button>
+          <span id="current-month" class="current-month"></span>
+          <button id="btn-next-month" class="btn btn-icon">▶</button>
+          <button id="btn-today" class="btn btn-secondary">Hoy</button>
+        </div>
+      </div>
+
+      <div id="calendar-view" class="calendar-view">
+        <!-- El calendario se generará aquí -->
+      </div>
+
+      <div id="calendar-events" class="calendar-events-list">
+        <h3>Actividades del día seleccionado</h3>
+        <div id="selected-day-events"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Personas -->
+    <div id="personas" class="tab-content">
+      <div class="section-header">
+        <h2>Gestión de Personas</h2>
+        <button id="btn-nueva-persona" class="btn btn-primary">
+          ➕ Nueva Persona
+        </button>
+      </div>
+
+      <div id="personas-list" class="personas-table">
+        <!-- La tabla de personas se cargará aquí -->
+      </div>
+    </div>
+  </div>
+
+<!-- Modal para editar actividad -->
+  <div id="modal-editar" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h2>Editar Actividad</h2>
+      <form id="form-editar-actividad">
+        <input type="hidden" id="edit-id">
+        
+        <div class="form-group">
+          <label for="edit-titulo">Título</label>
+          <input type="text" id="edit-titulo" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-fecha">Fecha</label>
+            <input type="date" id="edit-fecha" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-hora">Hora</label>
+            <input type="time" id="edit-hora" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-duracion">Duración (min)</label>
+            <input type="number" id="edit-duracion" min="15" step="15" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-descripcion">Descripción</label>
+          <textarea id="edit-descripcion" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Participantes</label>
+          <div id="edit-participantes-container" class="participantes-container">
+            <!-- Los participantes se cargarán aquí -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-estado">Estado</label>
+          <select id="edit-estado">
+            <option value="Activa">Activa</option>
+            <option value="Completada">Completada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
+          <button type="button" class="btn btn-success" id="btn-completar-actividad">
+            ✅ Completar
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-cancelar-actividad">
+            ❌ Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para nueva/editar persona -->
+  <div id="modal-persona" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h2 id="persona-modal-title">Nueva Persona</h2>
+      <form id="form-nueva-persona">
+        <input type="hidden" id="persona-id">
+        <div class="form-group">
+          <label for="persona-email">Email *</label>
+          <input type="email" id="persona-email" required>
+        </div>
+        <div class="form-group">
+          <label for="persona-nombre">Nombre *</label>
+          <input type="text" id="persona-nombre" required>
+        </div>
+        <div class="form-group">
+          <label for="persona-departamento">Departamento</label>
+          <input type="text" id="persona-departamento">
+        </div>
+        <div class="form-group">
+          <label for="persona-cargo">Cargo</label>
+          <input type="text" id="persona-cargo">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="persona-activo" checked>
+            Activo
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="calendario.js"></script>
+</body>
+</html>
