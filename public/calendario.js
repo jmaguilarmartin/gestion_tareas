@@ -103,11 +103,24 @@ function crearDiasDelMes(mes, año) {
   return html;
 }
 
+function actividadOcupaDia(act, fechaString) {
+  const fin = act.fecha_fin || act.fecha_inicio;
+  return fechaString >= act.fecha_inicio && fechaString <= fin;
+}
+
+function posicionEnActividad(act, fechaString) {
+  const fin = act.fecha_fin || act.fecha_inicio;
+  if (act.fecha_inicio === fin) return 'unico';
+  if (fechaString === act.fecha_inicio) return 'inicio';
+  if (fechaString === fin) return 'fin';
+  return 'medio';
+}
+
 function crearCeldaDia(dia, mes, año, otroMes) {
   // Ajustar mes y año para fechas fuera del mes actual
   let mesAjustado = mes;
   let añoAjustado = año;
-  
+
   if (mes < 0) {
     mesAjustado = 11;
     añoAjustado = año - 1;
@@ -118,14 +131,12 @@ function crearCeldaDia(dia, mes, año, otroMes) {
 
   const fecha = new Date(añoAjustado, mesAjustado, dia);
   const fechaString = formatearFechaISO(fecha);
-  
+
   const hoy = new Date();
   const hoyString = formatearFechaISO(hoy);
-  
-  // Contar actividades de este día usando la fecha correcta
-  const actividadesDelDia = actividades.filter(act => {
-    return act.fecha_inicio === fechaString;
-  });
+
+  // Actividades que incluyen este día (inicio, continuación o fin)
+  const actividadesDelDia = actividades.filter(act => actividadOcupaDia(act, fechaString));
 
   const clases = ['calendar-day'];
   if (otroMes) clases.push('other-month');
@@ -135,7 +146,7 @@ function crearCeldaDia(dia, mes, año, otroMes) {
   const maxEventosVisibles = 3;
   const eventosHTML = actividadesDelDia
     .slice(0, maxEventosVisibles)
-    .map(act => crearMiniEvento(act))
+    .map(act => crearMiniEvento(act, posicionEnActividad(act, fechaString)))
     .join('');
 
   // Mostrar contador si hay más eventos
@@ -158,14 +169,23 @@ function crearCeldaDia(dia, mes, año, otroMes) {
   `;
 }
 
-function crearMiniEvento(actividad) {
+function crearMiniEvento(actividad, posicion = 'unico') {
   const estadoClass = actividad.estado.toLowerCase();
-  
+  const esContinuacion = posicion === 'medio' || posicion === 'fin';
+
+  const leftContent = esContinuacion
+    ? `<span class="event-cont-arrow">›</span>`
+    : `<span class="event-status-badge ${estadoClass}"></span>
+       <span class="event-time">${actividad.hora_inicio}</span>`;
+
+  const tooltipFechas = actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio
+    ? ` (${actividad.fecha_inicio} – ${actividad.fecha_fin})`
+    : '';
+
   return `
-    <div class="calendar-mini-event ${estadoClass}"
-         title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}">
-      <span class="event-status-badge ${estadoClass}"></span>
-      <span class="event-time">${actividad.hora_inicio}</span>
+    <div class="calendar-mini-event ${estadoClass}${esContinuacion ? ' event-continuation' : ''}"
+         title="${actividad.titulo} - ${actividad.hora_inicio}${actividad.tipo ? ' · ' + actividad.tipo : ''}${tooltipFechas}">
+      ${leftContent}
       <span class="event-title">${actividad.tipo ? getTipoIcon(actividad.tipo) + ' ' : ''}${actividad.titulo}</span>
     </div>
   `;
@@ -207,9 +227,7 @@ function seleccionarDia(fecha) {
 }
 
 function mostrarActividadesDelDia(fecha) {
-  const actividadesDelDia = actividades.filter(act => {
-    return act.fecha_inicio === fecha;
-  });
+  const actividadesDelDia = actividades.filter(act => actividadOcupaDia(act, fecha));
 
   const container = document.getElementById('selected-day-events');
 
@@ -273,6 +291,10 @@ function crearTarjetaActividadDia(actividad) {
       </div>
       
       <div class="actividad-info">
+        ${actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio ? `
+        <div class="actividad-info-item">
+          📅 ${formatearFecha(actividad.fecha_inicio)} – ${formatearFecha(actividad.fecha_fin)}
+        </div>` : ''}
         <div class="actividad-info-item">
           🕒 ${actividad.hora_inicio} – ${actividad.hora_fin || calcularHoraFin(actividad.hora_inicio, actividad.duracion_min)}
         </div>

@@ -777,6 +777,32 @@ body {
   opacity: 0.7;
 }
 
+/* Días de continuación de eventos multidia */
+.calendar-mini-event.event-continuation {
+  border-left: none;
+  padding-left: 8px;
+}
+
+.calendar-mini-event.event-continuation.activa {
+  background: rgba(52, 168, 83, 0.15);
+}
+
+.calendar-mini-event.event-continuation.completada {
+  background: rgba(33, 150, 243, 0.15);
+}
+
+.calendar-mini-event.event-continuation.cancelada {
+  background: rgba(244, 67, 54, 0.12);
+  opacity: 0.65;
+}
+
+.event-cont-arrow {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.55;
+  margin-right: 2px;
+}
+
 .event-status-badge {
   width: 8px;
   height: 8px;
