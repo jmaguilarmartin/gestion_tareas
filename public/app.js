@@ -162,6 +162,9 @@ window.getTipoIcon = getTipoIcon;
 let actividades = [];
 let personas = [];
 let actividadSeleccionada = null;
+// Flags para saber si el usuario tocó manualmente las fechas/horas de fin
+let fechaFinTocada = false;
+let horaFinTocada = false;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
@@ -219,25 +222,23 @@ function configurarEventListeners() {
   // Formulario crear actividad
   document.getElementById('form-actividad').addEventListener('submit', crearActividad);
 
-  // Auto-rellenar fecha_fin y hora_fin con los valores de inicio
+  // Marcar como "tocado" cuando el usuario edita manualmente los campos de fin
+  document.getElementById('fecha_fin').addEventListener('change', () => { fechaFinTocada = true; });
+  document.getElementById('hora_fin').addEventListener('change', () => { horaFinTocada = true; });
+
+  // Auto-sincronizar inicio → fin mientras el usuario no haya tocado el campo de fin.
+  // No se usa "if (!fin.value)" porque 'change' se dispara al moverse entre DD/MM/AAAA
+  // y HH/MM antes de completar el valor, dejando el campo lleno con datos parciales
+  // que impiden la copia correcta en la siguiente pulsación.
   document.getElementById('fecha_inicio').addEventListener('change', (e) => {
-    const fechaFin = document.getElementById('fecha_fin');
+    if (fechaFinTocada) return;
     const val = e.target.value;
     const año = val ? parseInt(val.slice(0, 4), 10) : 0;
-    // Solo copiar cuando el año sea válido (el evento 'change' se dispara mientras
-    // el usuario escribe DD/MM/AAAA, antes de que el año esté completo el browser
-    // rellena con 0001, lo que causaría un año incorrecto y un error 500 en el backend)
-    if (año >= 2000) {
-      const finAño = fechaFin.value ? parseInt(fechaFin.value.slice(0, 4), 10) : 0;
-      // Copiar si fecha_fin está vacía O si tiene un año inválido de una copia prematura
-      if (!fechaFin.value || finAño < 2000) {
-        fechaFin.value = val;
-      }
-    }
+    if (año >= 2000) document.getElementById('fecha_fin').value = val;
   });
   document.getElementById('hora_inicio').addEventListener('change', (e) => {
-    const horaFin = document.getElementById('hora_fin');
-    if (!horaFin.value) horaFin.value = e.target.value;
+    if (horaFinTocada) return;
+    if (e.target.value) document.getElementById('hora_fin').value = e.target.value;
   });
 
   // Formulario editar actividad
@@ -325,6 +326,12 @@ async function cargarActividades() {
     } else {
       noActividades.style.display = 'none';
       renderizarActividades(actividades);
+    }
+
+    // Si la pestaña del calendario está activa, re-renderizar para reflejar los datos
+    const calTab = document.getElementById('calendario');
+    if (calTab && calTab.classList.contains('active') && typeof renderizarCalendario === 'function') {
+      renderizarCalendario();
     }
 
   } catch (error) {
@@ -943,6 +950,8 @@ function cerrarModales() {
 
 function resetForm() {
   document.getElementById('form-actividad').reset();
+  fechaFinTocada = false;
+  horaFinTocada = false;
   document.querySelectorAll('input[name="participantes"]').forEach(input => {
     input.checked = false;
   });

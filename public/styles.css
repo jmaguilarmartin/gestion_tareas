@@ -1003,12 +1003,12 @@ body {
 }
 
 .calendar-dia-mini.con-actividad {
-  background: rgba(0, 0, 0, 0.07);
+  background: #e8f0fe;
   border-radius: 3px;
 }
 
 .calendar-dia-mini.con-actividad:hover {
-  background: rgba(0, 0, 0, 0.13);
+  background: #d2e3fc;
 }
 
 .dia-dots {
