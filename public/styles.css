@@ -1026,16 +1026,86 @@ body {
   flex-shrink: 0;
 }
 
-.dia-dot.activa {
-  background: var(--secondary-color);
+/* Leyenda tipos — calendario anual */
+.calendario-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 0.82rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
 
-.dia-dot.completada {
-  background: #2196f3;
+.leyenda-titulo {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-right: 4px;
 }
 
-.dia-dot.cancelada {
-  background: var(--danger-color);
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-color);
+}
+
+.leyenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Resumen Dashboard */
+.dashboard-resumen {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.resumen-card {
+  flex: 1;
+  min-width: 200px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.resumen-card h4 {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+.resumen-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.resumen-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.resumen-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* Responsive para calendario */

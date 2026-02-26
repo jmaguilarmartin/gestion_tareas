@@ -153,10 +153,24 @@ const TIPO_ICONOS = {
   'Teatro/Musical': '🎭'
 };
 
+const TIPO_COLORES = {
+  'Concierto':      '#9c27b0',
+  'Viaje':          '#ff9800',
+  'Comida/Cena':    '#f44336',
+  'Teatro/Musical': '#00bcd4'
+};
+
 function getTipoIcon(tipo) {
   return TIPO_ICONOS[tipo] || '📌';
 }
 window.getTipoIcon = getTipoIcon;
+
+function getTipoColor(tipo) {
+  return TIPO_COLORES[tipo] || '#607d8b';
+}
+window.getTipoColor = getTipoColor;
+window.TIPO_COLORES = TIPO_COLORES;
+window.TIPO_ICONOS = TIPO_ICONOS;
 
 // Estado global
 let actividades = [];
@@ -320,6 +334,7 @@ async function cargarActividades() {
     }
 
     actividades = data.data;
+    renderizarResumenDashboard(actividades);
 
     if (actividades.length === 0) {
       noActividades.style.display = 'block';
@@ -340,6 +355,51 @@ async function cargarActividades() {
   } finally {
     loading.style.display = 'none';
   }
+}
+
+function renderizarResumenDashboard(acts) {
+  const container = document.getElementById('dashboard-resumen');
+  if (!container) return;
+
+  const porTipo = {};
+  Object.keys(TIPO_COLORES).forEach(t => { porTipo[t] = 0; });
+  porTipo['Otros'] = 0;
+
+  acts.forEach(a => {
+    if (TIPO_COLORES[a.tipo]) {
+      porTipo[a.tipo]++;
+    } else {
+      porTipo['Otros']++;
+    }
+  });
+
+  const activas     = acts.filter(a => a.estado === 'Activa').length;
+  const completadas = acts.filter(a => a.estado === 'Completada').length;
+  const canceladas  = acts.filter(a => a.estado === 'Cancelada').length;
+
+  const tipoItems = [...Object.keys(TIPO_COLORES), 'Otros'].map(t => {
+    const color = t === 'Otros' ? '#607d8b' : TIPO_COLORES[t];
+    const icon  = TIPO_ICONOS[t] ? TIPO_ICONOS[t] + ' ' : '';
+    return `<span class="resumen-item">
+      <span class="resumen-dot" style="background:${color}"></span>
+      ${icon}${t} <strong>${porTipo[t]}</strong>
+    </span>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="resumen-card">
+      <h4>Por tipo</h4>
+      <div class="resumen-items">${tipoItems}</div>
+    </div>
+    <div class="resumen-card">
+      <h4>Por estado</h4>
+      <div class="resumen-items">
+        <span class="resumen-item"><span class="resumen-dot" style="background:#34a853"></span> Activas <strong>${activas}</strong></span>
+        <span class="resumen-item"><span class="resumen-dot" style="background:#2196f3"></span> Completadas <strong>${completadas}</strong></span>
+        <span class="resumen-item"><span class="resumen-dot" style="background:#ea4335"></span> Canceladas <strong>${canceladas}</strong></span>
+      </div>
+    </div>
+  `;
 }
 
 function renderizarActividades(actividadesAMostrar) {

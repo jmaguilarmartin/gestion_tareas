@@ -101,8 +101,19 @@ function renderizarCalendarioAnual() {
     mesesHTML.push(crearMesMini(m, año));
   }
 
+  const tiposColores = window.TIPO_COLORES || {};
+  const tiposIconos  = window.TIPO_ICONOS  || {};
+  const leyendaItems = Object.entries(tiposColores).map(([tipo, color]) =>
+    `<span class="leyenda-item"><span class="leyenda-dot" style="background:${color}"></span>${tiposIconos[tipo] ? tiposIconos[tipo] + ' ' : ''}${tipo}</span>`
+  ).join('');
+  const leyendaHTML = `<div class="calendario-leyenda">
+    <span class="leyenda-titulo">Tipo de actividad:</span>
+    ${leyendaItems}
+    <span class="leyenda-item"><span class="leyenda-dot" style="background:#607d8b"></span>Otros / Sin tipo</span>
+  </div>`;
+
   const calendarView = document.getElementById('calendar-view');
-  calendarView.innerHTML = `<div class="calendar-anual-grid">${mesesHTML.join('')}</div>`;
+  calendarView.innerHTML = `<div class="calendar-anual-grid">${mesesHTML.join('')}</div>${leyendaHTML}`;
 }
 
 function crearMesMini(mes, año) {
@@ -131,7 +142,7 @@ function crearMesMini(mes, año) {
     const actsDelDia = actividades.filter(act => actividadOcupaDia(act, fechaStr));
     const dotsHTML = actsDelDia.length > 0
       ? `<div class="dia-dots">${actsDelDia.slice(0, 3).map(act =>
-          `<span class="dia-dot ${act.estado.toLowerCase()}"></span>`).join('')}</div>`
+          `<span class="dia-dot" style="background:${getTipoColor(act.tipo)}"></span>`).join('')}</div>`
       : '';
 
     celdas += `<div class="calendar-dia-mini${esHoy ? ' hoy' : ''}${actsDelDia.length > 0 ? ' con-actividad' : ''}"
