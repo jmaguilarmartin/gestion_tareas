@@ -250,9 +250,11 @@ function configurarEventListeners() {
     const año = val ? parseInt(val.slice(0, 4), 10) : 0;
     if (año >= 2000) document.getElementById('fecha_fin').value = val;
   });
-  document.getElementById('hora_inicio').addEventListener('change', (e) => {
-    if (horaFinTocada) return;
-    if (e.target.value) document.getElementById('hora_fin').value = e.target.value;
+  ['input', 'change'].forEach(evt => {
+    document.getElementById('hora_inicio').addEventListener(evt, (e) => {
+      if (horaFinTocada) return;
+      if (e.target.value) document.getElementById('hora_fin').value = e.target.value;
+    });
   });
 
   // Formulario editar actividad
@@ -533,9 +535,9 @@ async function crearActividad(e) {
     }
 
     mostrarMensajeForm('success', '✅ Actividad creada exitosamente. Notificaciones enviadas.');
-    
-    // Reset form
-    e.target.reset();
+
+    // Reset form y flags de auto-copia
+    resetForm();
     
     // Recargar actividades
     await cargarActividades();
