@@ -6,7 +6,9 @@
     "dev": "netlify dev",
     "build": "echo 'Building...'",
     "deploy": "netlify deploy --prod",
-    "get-token": "node scripts/get-refresh-token.js"
+    "get-token": "node scripts/get-refresh-token.js",
+    "sync-env": "bash scripts/sync-env-netlify.sh",
+    "sync-env:win": "powershell -ExecutionPolicy Bypass -File scripts/sync-env-netlify.ps1"
   },
   "dependencies": {
     "googleapis": "^128.0.0",
