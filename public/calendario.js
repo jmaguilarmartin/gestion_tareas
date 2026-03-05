@@ -443,6 +443,98 @@ function calcularHoraFin(horaInicio, duracionMin) {
   return fin.toTimeString().slice(0, 5);
 }
 
+function exportarExcel() {
+  const año = calendarioFecha.getFullYear();
+  let actsExportar, nombreArchivo, periodoLabel;
+
+  if (vistaCalendario === 'anual') {
+    actsExportar = actividades.filter(a => a.fecha_inicio.startsWith(String(año)));
+    nombreArchivo = `actividades_${año}.xls`;
+    periodoLabel = String(año);
+  } else {
+    const mes = String(calendarioFecha.getMonth() + 1).padStart(2, '0');
+    actsExportar = actividades.filter(a => a.fecha_inicio.startsWith(`${año}-${mes}`));
+    nombreArchivo = `actividades_${año}-${mes}.xls`;
+    const nombreMes = calendarioFecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    periodoLabel = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+  }
+
+  if (actsExportar.length === 0) {
+    alert('No hay actividades para exportar en el periodo seleccionado.');
+    return;
+  }
+
+  const ordenadas = [...actsExportar].sort((a, b) =>
+    a.fecha_inicio.localeCompare(b.fecha_inicio) || a.hora_inicio.localeCompare(b.hora_inicio)
+  );
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function cell(value, type = 'String', bold = false) {
+    const style = bold ? ' ss:StyleID="bold"' : '';
+    return `<Cell${style}><Data ss:Type="${type}">${esc(value)}</Data></Cell>`;
+  }
+
+  const cabeceras = ['ID', 'Título', 'Tipo', 'Fecha inicio', 'Hora inicio', 'Fecha fin', 'Hora fin', 'Duración (min)', 'Estado', 'Descripción', 'Participantes', 'Creado por'];
+  const headerRow = '<Row>' + cabeceras.map(h => cell(h, 'String', true)).join('') + '</Row>';
+
+  const dataRows = ordenadas.map(a => {
+    const duracion = a.duracion_min != null ? a.duracion_min : '';
+    return '<Row>' + [
+      cell(a.id),
+      cell(a.titulo),
+      cell(a.tipo || ''),
+      cell(a.fecha_inicio),
+      cell(a.hora_inicio),
+      cell(a.fecha_fin || a.fecha_inicio),
+      cell(a.hora_fin || a.hora_inicio),
+      duracion !== '' ? cell(duracion, 'Number') : cell(''),
+      cell(a.estado),
+      cell(a.descripcion || ''),
+      cell((a.participantes || []).join('; ')),
+      cell(a.creado_por || '')
+    ].join('') + '</Row>';
+  }).join('');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <Styles>
+    <Style ss:ID="bold">
+      <Font ss:Bold="1"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="${esc(periodoLabel)}">
+    <Table>
+      ${headerRow}
+      ${dataRows}
+    </Table>
+    <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+      <FreezePanes/>
+      <FrozenNoSplit/>
+      <SplitHorizontal>1</SplitHorizontal>
+      <TopRowBottomPane>1</TopRowBottomPane>
+    </WorksheetOptions>
+  </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombreArchivo;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportarCSV() {
   const año = calendarioFecha.getFullYear();
   let actsExportar, nombreArchivo;
@@ -493,6 +585,7 @@ window.inicializarCalendario = inicializarCalendario;
 window.seleccionarDia = seleccionarDia;
 window.cambiarVista = cambiarVista;
 window.irADia = irADia;
+window.exportarExcel = exportarExcel;
 window.exportarCSV = exportarCSV;
 // Exponer función para crear mini eventos
 window.crearMiniEvento = crearMiniEvento;
