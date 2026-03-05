@@ -269,8 +269,10 @@ function configurarEventListeners() {
   // Refresh actividades
   document.getElementById('btn-refresh').addEventListener('click', cargarActividades);
 
-  // Filtro estado
+  // Filtros dashboard
   document.getElementById('filter-estado').addEventListener('change', filtrarActividades);
+  document.getElementById('filter-mes').addEventListener('change', filtrarActividades);
+  document.getElementById('filter-tipo').addEventListener('change', filtrarActividades);
 
   // Modales
   document.querySelectorAll('.modal-close').forEach(btn => {
@@ -408,7 +410,11 @@ function renderizarActividades(actividadesAMostrar) {
   const container = document.getElementById('actividades-list');
   container.innerHTML = '';
 
-  actividadesAMostrar.forEach(actividad => {
+  const ordenadas = [...actividadesAMostrar].sort((a, b) =>
+    a.fecha_inicio.localeCompare(b.fecha_inicio) || a.hora_inicio.localeCompare(b.hora_inicio)
+  );
+
+  ordenadas.forEach(actividad => {
     const card = crearActividadCard(actividad);
     container.appendChild(card);
   });
@@ -775,14 +781,23 @@ Participantes: ${actividad.participantes.join(', ')}
 }
 
 function filtrarActividades() {
-  const filtro = document.getElementById('filter-estado').value;
-  
-  if (!filtro) {
-    renderizarActividades(actividades);
-  } else {
-    const filtradas = actividades.filter(a => a.estado === filtro);
-    renderizarActividades(filtradas);
+  const filtroEstado = document.getElementById('filter-estado').value;
+  const filtroMes   = document.getElementById('filter-mes').value;
+  const filtroTipo  = document.getElementById('filter-tipo').value;
+
+  let filtradas = actividades;
+
+  if (filtroEstado) {
+    filtradas = filtradas.filter(a => a.estado === filtroEstado);
   }
+  if (filtroMes) {
+    filtradas = filtradas.filter(a => parseInt(a.fecha_inicio.split('-')[1], 10) === parseInt(filtroMes, 10));
+  }
+  if (filtroTipo) {
+    filtradas = filtradas.filter(a => a.tipo === filtroTipo);
+  }
+
+  renderizarActividades(filtradas);
 }
 
 // ==================== PERSONAS ====================

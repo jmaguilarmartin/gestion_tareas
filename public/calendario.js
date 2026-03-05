@@ -443,10 +443,56 @@ function calcularHoraFin(horaInicio, duracionMin) {
   return fin.toTimeString().slice(0, 5);
 }
 
+function exportarCSV() {
+  const año = calendarioFecha.getFullYear();
+  let actsExportar, nombreArchivo;
+
+  if (vistaCalendario === 'anual') {
+    actsExportar = actividades.filter(a => a.fecha_inicio.startsWith(String(año)));
+    nombreArchivo = `actividades_${año}.csv`;
+  } else {
+    const mes = String(calendarioFecha.getMonth() + 1).padStart(2, '0');
+    actsExportar = actividades.filter(a => a.fecha_inicio.startsWith(`${año}-${mes}`));
+    nombreArchivo = `actividades_${año}-${mes}.csv`;
+  }
+
+  if (actsExportar.length === 0) {
+    alert('No hay actividades para exportar en el periodo seleccionado.');
+    return;
+  }
+
+  const cabeceras = ['ID', 'Título', 'Tipo', 'Fecha inicio', 'Hora inicio', 'Fecha fin', 'Hora fin', 'Estado', 'Descripción', 'Participantes', 'Creado por'];
+  const filas = actsExportar.map(a =>
+    [
+      a.id,
+      a.titulo,
+      a.tipo || '',
+      a.fecha_inicio,
+      a.hora_inicio,
+      a.fecha_fin || a.fecha_inicio,
+      a.hora_fin || a.hora_inicio,
+      a.estado,
+      a.descripcion || '',
+      (a.participantes || []).join('; '),
+      a.creado_por || ''
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+  );
+
+  const csv = [cabeceras.join(','), ...filas].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombreArchivo;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 // Exponer funciones globales
 window.inicializarCalendario = inicializarCalendario;
 window.seleccionarDia = seleccionarDia;
 window.cambiarVista = cambiarVista;
 window.irADia = irADia;
+window.exportarCSV = exportarCSV;
 // Exponer función para crear mini eventos
 window.crearMiniEvento = crearMiniEvento;
