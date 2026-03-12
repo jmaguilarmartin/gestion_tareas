@@ -43,6 +43,28 @@
       <div class="section-header">
         <h2>Actividades Programadas</h2>
         <div class="filters">
+          <select id="filter-mes">
+            <option value="">Todos los meses</option>
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <select id="filter-tipo">
+            <option value="">Todos los tipos</option>
+            <option value="Concierto">🎵 Concierto</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Comida/Cena">🍽️ Comida/Cena</option>
+            <option value="Teatro/Musical">🎭 Teatro/Musical</option>
+          </select>
           <select id="filter-estado">
             <option value="">Todos los estados</option>
             <option value="Activa">Activas</option>
@@ -52,6 +74,8 @@
           <button id="btn-refresh" class="btn btn-secondary">🔄 Actualizar</button>
         </div>
       </div>
+
+      <div id="dashboard-resumen" class="dashboard-resumen"></div>
 
       <div id="loading" class="loading">
         <div class="spinner"></div>
@@ -79,25 +103,42 @@
       <form id="form-actividad" class="form-actividad">
         <div class="form-group">
           <label for="titulo">Título *</label>
-          <input type="text" id="titulo" name="titulo" required 
+          <input type="text" id="titulo" name="titulo" required
                  placeholder="Ej: Reunión de equipo">
+        </div>
+
+        <div class="form-group">
+          <label for="tipo">Tipo *</label>
+          <select id="tipo" name="tipo" required>
+            <option value="">-- Selecciona un tipo --</option>
+            <option value="Concierto">🎵 Concierto</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Comida/Cena">🍽️ Comida/Cena</option>
+            <option value="Teatro/Musical">🎭 Teatro/Musical</option>
+          </select>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="fecha_inicio">Fecha *</label>
+            <label for="fecha_inicio">Fecha inicio *</label>
             <input type="date" id="fecha_inicio" name="fecha_inicio" required>
           </div>
 
           <div class="form-group">
-            <label for="hora_inicio">Hora *</label>
+            <label for="hora_inicio">Hora inicio *</label>
             <input type="time" id="hora_inicio" name="hora_inicio" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha_fin">Fecha fin</label>
+            <input type="date" id="fecha_fin" name="fecha_fin">
           </div>
 
           <div class="form-group">
-            <label for="duracion_min">Duración (min) *</label>
-            <input type="number" id="duracion_min" name="duracion_min" 
-                   min="15" step="15" value="60" required>
+            <label for="hora_fin">Hora fin</label>
+            <input type="time" id="hora_fin" name="hora_fin">
           </div>
         </div>
 
@@ -133,10 +174,16 @@
       <div class="section-header">
         <h2>Vista de Calendario</h2>
         <div class="calendar-controls">
+          <div class="calendar-vista-toggle">
+            <button id="btn-vista-mensual" class="btn btn-secondary active" onclick="cambiarVista('mensual')">Mes</button>
+            <button id="btn-vista-anual" class="btn btn-secondary" onclick="cambiarVista('anual')">Año</button>
+          </div>
           <button id="btn-prev-month" class="btn btn-icon">◀</button>
           <span id="current-month" class="current-month"></span>
           <button id="btn-next-month" class="btn btn-icon">▶</button>
           <button id="btn-today" class="btn btn-secondary">Hoy</button>
+          <button id="btn-exportar-excel" class="btn btn-secondary" onclick="exportarExcel()">📊 Exportar Excel</button>
+          <button id="btn-exportar-csv" class="btn btn-secondary" onclick="exportarCSV()">⬇️ Exportar CSV</button>
         </div>
       </div>
 
@@ -178,18 +225,36 @@
           <input type="text" id="edit-titulo" required>
         </div>
 
+        <div class="form-group">
+          <label for="edit-tipo">Tipo</label>
+          <select id="edit-tipo">
+            <option value="">-- Sin tipo --</option>
+            <option value="Concierto">🎵 Concierto</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Comida/Cena">🍽️ Comida/Cena</option>
+            <option value="Teatro/Musical">🎭 Teatro/Musical</option>
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label for="edit-fecha">Fecha</label>
+            <label for="edit-fecha">Fecha inicio</label>
             <input type="date" id="edit-fecha" required>
           </div>
           <div class="form-group">
-            <label for="edit-hora">Hora</label>
+            <label for="edit-hora">Hora inicio</label>
             <input type="time" id="edit-hora" required>
           </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="edit-duracion">Duración (min)</label>
-            <input type="number" id="edit-duracion" min="15" step="15" required>
+            <label for="edit-fecha-fin">Fecha fin</label>
+            <input type="date" id="edit-fecha-fin">
+          </div>
+          <div class="form-group">
+            <label for="edit-hora-fin">Hora fin</label>
+            <input type="time" id="edit-hora-fin">
           </div>
         </div>
 

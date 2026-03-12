@@ -146,10 +146,39 @@ window.cerrarSesion = cerrarSesion;
 // API Base URL
 const API_BASE = '/.netlify/functions';
 
+const TIPO_ICONOS = {
+  'Concierto': '🎵',
+  'Viaje': '✈️',
+  'Comida/Cena': '🍽️',
+  'Teatro/Musical': '🎭'
+};
+
+const TIPO_COLORES = {
+  'Concierto':      '#9c27b0',
+  'Viaje':          '#ff9800',
+  'Comida/Cena':    '#f44336',
+  'Teatro/Musical': '#00bcd4'
+};
+
+function getTipoIcon(tipo) {
+  return TIPO_ICONOS[tipo] || '📌';
+}
+window.getTipoIcon = getTipoIcon;
+
+function getTipoColor(tipo) {
+  return TIPO_COLORES[tipo] || '#607d8b';
+}
+window.getTipoColor = getTipoColor;
+window.TIPO_COLORES = TIPO_COLORES;
+window.TIPO_ICONOS = TIPO_ICONOS;
+
 // Estado global
 let actividades = [];
 let personas = [];
 let actividadSeleccionada = null;
+// Flags para saber si el usuario tocó manualmente las fechas/horas de fin
+let fechaFinTocada = false;
+let horaFinTocada = false;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
@@ -207,6 +236,27 @@ function configurarEventListeners() {
   // Formulario crear actividad
   document.getElementById('form-actividad').addEventListener('submit', crearActividad);
 
+  // Marcar como "tocado" cuando el usuario edita manualmente los campos de fin
+  document.getElementById('fecha_fin').addEventListener('change', () => { fechaFinTocada = true; });
+  document.getElementById('hora_fin').addEventListener('change', () => { horaFinTocada = true; });
+
+  // Auto-sincronizar inicio → fin mientras el usuario no haya tocado el campo de fin.
+  // No se usa "if (!fin.value)" porque 'change' se dispara al moverse entre DD/MM/AAAA
+  // y HH/MM antes de completar el valor, dejando el campo lleno con datos parciales
+  // que impiden la copia correcta en la siguiente pulsación.
+  document.getElementById('fecha_inicio').addEventListener('change', (e) => {
+    if (fechaFinTocada) return;
+    const val = e.target.value;
+    const año = val ? parseInt(val.slice(0, 4), 10) : 0;
+    if (año >= 2000) document.getElementById('fecha_fin').value = val;
+  });
+  ['input', 'change'].forEach(evt => {
+    document.getElementById('hora_inicio').addEventListener(evt, (e) => {
+      if (horaFinTocada) return;
+      if (e.target.value) document.getElementById('hora_fin').value = e.target.value;
+    });
+  });
+
   // Formulario editar actividad
   document.getElementById('form-editar-actividad').addEventListener('submit', actualizarActividad);
 
@@ -219,8 +269,10 @@ function configurarEventListeners() {
   // Refresh actividades
   document.getElementById('btn-refresh').addEventListener('click', cargarActividades);
 
-  // Filtro estado
+  // Filtros dashboard
   document.getElementById('filter-estado').addEventListener('change', filtrarActividades);
+  document.getElementById('filter-mes').addEventListener('change', filtrarActividades);
+  document.getElementById('filter-tipo').addEventListener('change', filtrarActividades);
 
   // Modales
   document.querySelectorAll('.modal-close').forEach(btn => {
@@ -286,12 +338,19 @@ async function cargarActividades() {
     }
 
     actividades = data.data;
+    renderizarResumenDashboard(actividades);
 
     if (actividades.length === 0) {
       noActividades.style.display = 'block';
     } else {
       noActividades.style.display = 'none';
       renderizarActividades(actividades);
+    }
+
+    // Si la pestaña del calendario está activa, re-renderizar para reflejar los datos
+    const calTab = document.getElementById('calendario');
+    if (calTab && calTab.classList.contains('active') && typeof renderizarCalendario === 'function') {
+      renderizarCalendario();
     }
 
   } catch (error) {
@@ -302,11 +361,60 @@ async function cargarActividades() {
   }
 }
 
+function renderizarResumenDashboard(acts) {
+  const container = document.getElementById('dashboard-resumen');
+  if (!container) return;
+
+  const porTipo = {};
+  Object.keys(TIPO_COLORES).forEach(t => { porTipo[t] = 0; });
+  porTipo['Otros'] = 0;
+
+  acts.forEach(a => {
+    if (TIPO_COLORES[a.tipo]) {
+      porTipo[a.tipo]++;
+    } else {
+      porTipo['Otros']++;
+    }
+  });
+
+  const activas     = acts.filter(a => a.estado === 'Activa').length;
+  const completadas = acts.filter(a => a.estado === 'Completada').length;
+  const canceladas  = acts.filter(a => a.estado === 'Cancelada').length;
+
+  const tipoItems = [...Object.keys(TIPO_COLORES), 'Otros'].map(t => {
+    const color = t === 'Otros' ? '#607d8b' : TIPO_COLORES[t];
+    const icon  = TIPO_ICONOS[t] ? TIPO_ICONOS[t] + ' ' : '';
+    return `<span class="resumen-item">
+      <span class="resumen-dot" style="background:${color}"></span>
+      ${icon}${t} <strong>${porTipo[t]}</strong>
+    </span>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="resumen-card">
+      <h4>Por tipo</h4>
+      <div class="resumen-items">${tipoItems}</div>
+    </div>
+    <div class="resumen-card">
+      <h4>Por estado</h4>
+      <div class="resumen-items">
+        <span class="resumen-item"><span class="resumen-dot" style="background:#34a853"></span> Activas <strong>${activas}</strong></span>
+        <span class="resumen-item"><span class="resumen-dot" style="background:#2196f3"></span> Completadas <strong>${completadas}</strong></span>
+        <span class="resumen-item"><span class="resumen-dot" style="background:#ea4335"></span> Canceladas <strong>${canceladas}</strong></span>
+      </div>
+    </div>
+  `;
+}
+
 function renderizarActividades(actividadesAMostrar) {
   const container = document.getElementById('actividades-list');
   container.innerHTML = '';
 
-  actividadesAMostrar.forEach(actividad => {
+  const ordenadas = [...actividadesAMostrar].sort((a, b) =>
+    a.fecha_inicio.localeCompare(b.fecha_inicio) || a.hora_inicio.localeCompare(b.hora_inicio)
+  );
+
+  ordenadas.forEach(actividad => {
     const card = crearActividadCard(actividad);
     container.appendChild(card);
   });
@@ -347,20 +455,26 @@ function crearActividadCard(actividad) {
     `;
   }
 
+  const horaFin = actividad.hora_fin || actividad.hora_inicio;
+  const fechaFinMostrar = actividad.fecha_fin && actividad.fecha_fin !== actividad.fecha_inicio
+    ? ` – ${formatearFecha(actividad.fecha_fin)}`
+    : '';
+
   card.innerHTML = `
     <div class="actividad-header">
       <div>
         <div class="actividad-titulo">${actividad.titulo}</div>
         <span class="actividad-estado ${actividad.estado.toLowerCase()}">${actividad.estado}</span>
+        ${actividad.tipo ? `<span class="actividad-estado" style="background:#6c757d;color:#fff;margin-left:4px;">${getTipoIcon(actividad.tipo)} ${actividad.tipo}</span>` : ''}
       </div>
     </div>
 
     <div class="actividad-info">
       <div class="actividad-info-item">
-        📅 ${formatearFecha(actividad.fecha_inicio)}
+        📅 ${formatearFecha(actividad.fecha_inicio)}${fechaFinMostrar}
       </div>
       <div class="actividad-info-item">
-        🕒 ${actividad.hora_inicio} (${actividad.duracion_min} min)
+        🕒 ${actividad.hora_inicio} – ${horaFin}
       </div>
     </div>
 
@@ -401,12 +515,14 @@ async function crearActividad(e) {
 
   const actividad = {
     titulo: formData.get('titulo'),
+    tipo: formData.get('tipo'),
     fecha_inicio: formData.get('fecha_inicio'),
     hora_inicio: formData.get('hora_inicio'),
-    duracion_min: parseInt(formData.get('duracion_min')),
+    fecha_fin: formData.get('fecha_fin') || formData.get('fecha_inicio'),
+    hora_fin: formData.get('hora_fin') || formData.get('hora_inicio'),
     descripcion: formData.get('descripcion'),
     participantes: participantesSeleccionados,
-    creado_por: usuario.email // ← USAR EMAIL DE LA SESIÓN
+    creado_por: usuario.email
   };
 
   try {
@@ -425,9 +541,9 @@ async function crearActividad(e) {
     }
 
     mostrarMensajeForm('success', '✅ Actividad creada exitosamente. Notificaciones enviadas.');
-    
-    // Reset form
-    e.target.reset();
+
+    // Reset form y flags de auto-copia
+    resetForm();
     
     // Recargar actividades
     await cargarActividades();
@@ -453,12 +569,16 @@ async function actualizarActividad(e) {
     document.querySelectorAll('input[name="edit-participantes"]:checked')
   ).map(input => input.value);
 
+  const fechaInicio = document.getElementById('edit-fecha').value;
+  const horaInicio = document.getElementById('edit-hora').value;
   const datos = {
     id: id,
     titulo: document.getElementById('edit-titulo').value,
-    fecha_inicio: document.getElementById('edit-fecha').value,
-    hora_inicio: document.getElementById('edit-hora').value,
-    duracion_min: parseInt(document.getElementById('edit-duracion').value),
+    tipo: document.getElementById('edit-tipo').value,
+    fecha_inicio: fechaInicio,
+    hora_inicio: horaInicio,
+    fecha_fin: document.getElementById('edit-fecha-fin').value || fechaInicio,
+    hora_fin: document.getElementById('edit-hora-fin').value || horaInicio,
     descripcion: document.getElementById('edit-descripcion').value,
     estado: document.getElementById('edit-estado').value,
     participantes: participantesSeleccionados
@@ -571,15 +691,45 @@ async function cancelarActividadDirecto(id) {
   }
 }
 
+async function eliminarActividad(id) {
+  if (!confirm('¿Eliminar esta actividad definitivamente? Esta acción no se puede deshacer.')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/actividades-eliminar`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error);
+    }
+
+    mostrarMensaje('success', 'Actividad eliminada exitosamente');
+    cerrarModales();
+    await cargarActividades();
+
+  } catch (error) {
+    console.error('Error:', error);
+    mostrarMensaje('error', 'Error al eliminar: ' + error.message);
+  }
+}
+
 function abrirEditarActividad(id) {
   const actividad = actividades.find(a => a.id === id);
   if (!actividad) return;
 
   document.getElementById('edit-id').value = actividad.id;
   document.getElementById('edit-titulo').value = actividad.titulo;
+  document.getElementById('edit-tipo').value = actividad.tipo || '';
   document.getElementById('edit-fecha').value = actividad.fecha_inicio;
   document.getElementById('edit-hora').value = actividad.hora_inicio;
-  document.getElementById('edit-duracion').value = actividad.duracion_min;
+  document.getElementById('edit-fecha-fin').value = actividad.fecha_fin || actividad.fecha_inicio;
+  document.getElementById('edit-hora-fin').value = actividad.hora_fin || actividad.hora_inicio;
   document.getElementById('edit-descripcion').value = actividad.descripcion;
   document.getElementById('edit-estado').value = actividad.estado;
 
@@ -621,9 +771,9 @@ function verDetalles(id) {
 
   alert(`
 Título: ${actividad.titulo}
-Fecha: ${actividad.fecha_inicio}
-Hora: ${actividad.hora_inicio}
-Duración: ${actividad.duracion_min} minutos
+Tipo: ${actividad.tipo ? getTipoIcon(actividad.tipo) + ' ' + actividad.tipo : 'Sin tipo'}
+Inicio: ${actividad.fecha_inicio} a las ${actividad.hora_inicio}
+Fin: ${actividad.fecha_fin || actividad.fecha_inicio} a las ${actividad.hora_fin || actividad.hora_inicio}
 Estado: ${actividad.estado}
 Descripción: ${actividad.descripcion}
 Participantes: ${actividad.participantes.join(', ')}
@@ -631,14 +781,23 @@ Participantes: ${actividad.participantes.join(', ')}
 }
 
 function filtrarActividades() {
-  const filtro = document.getElementById('filter-estado').value;
-  
-  if (!filtro) {
-    renderizarActividades(actividades);
-  } else {
-    const filtradas = actividades.filter(a => a.estado === filtro);
-    renderizarActividades(filtradas);
+  const filtroEstado = document.getElementById('filter-estado').value;
+  const filtroMes   = document.getElementById('filter-mes').value;
+  const filtroTipo  = document.getElementById('filter-tipo').value;
+
+  let filtradas = actividades;
+
+  if (filtroEstado) {
+    filtradas = filtradas.filter(a => a.estado === filtroEstado);
   }
+  if (filtroMes) {
+    filtradas = filtradas.filter(a => parseInt(a.fecha_inicio.split('-')[1], 10) === parseInt(filtroMes, 10));
+  }
+  if (filtroTipo) {
+    filtradas = filtradas.filter(a => a.tipo === filtroTipo);
+  }
+
+  renderizarActividades(filtradas);
 }
 
 // ==================== PERSONAS ====================
@@ -868,6 +1027,8 @@ function cerrarModales() {
 
 function resetForm() {
   document.getElementById('form-actividad').reset();
+  fechaFinTocada = false;
+  horaFinTocada = false;
   document.querySelectorAll('input[name="participantes"]').forEach(input => {
     input.checked = false;
   });
@@ -940,6 +1101,7 @@ window.verDetalles = verDetalles;
 window.resetForm = resetForm;
 window.completarActividadDirecto = completarActividadDirecto;
 window.cancelarActividadDirecto = cancelarActividadDirecto;
+window.eliminarActividad = eliminarActividad;
 window.editarPersona = editarPersona;
 window.eliminarPersona = eliminarPersona;
 window.renderizarParticipantesEdicion = renderizarParticipantesEdicion;
