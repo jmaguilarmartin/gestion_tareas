@@ -8,11 +8,13 @@
     "deploy": "netlify deploy --prod",
     "get-token": "node scripts/get-refresh-token.js",
     "sync-env": "bash scripts/sync-env-netlify.sh",
-    "sync-env:win": "powershell -ExecutionPolicy Bypass -File scripts/sync-env-netlify.ps1"
+    "sync-env:win": "powershell -ExecutionPolicy Bypass -File scripts/sync-env-netlify.ps1",
+    "renombrar-pdfs": "node scripts/renombrar-pdfs-gastos.js"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
     "googleapis": "^128.0.0",
-    "dotenv": "^16.0.3"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
