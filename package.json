@@ -9,7 +9,9 @@
     "get-token": "node scripts/get-refresh-token.js",
     "sync-env": "bash scripts/sync-env-netlify.sh",
     "sync-env:win": "powershell -ExecutionPolicy Bypass -File scripts/sync-env-netlify.ps1",
-    "renombrar-pdfs": "node scripts/renombrar-pdfs-gastos.js"
+    "renombrar-pdfs": "node scripts/renombrar-pdfs-gastos.js",
+    "renombrar-pdfs-gastos": "node scripts/renombrar-pdfs-gastos.js",
+    "renombrar-pdfs-ingresos": "node scripts/renombrar-pdfs-ingresos.js"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
