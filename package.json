@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Sistema de gestion de actividades con calendario y notificaciones",
   "scripts": {
+    "start": "node server.js",
     "dev": "netlify dev",
     "build": "echo 'Building...'",
     "deploy": "netlify deploy --prod",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
+    "express": "^4.22.2",
     "googleapis": "^128.0.0",
     "xlsx": "^0.18.5"
   },
