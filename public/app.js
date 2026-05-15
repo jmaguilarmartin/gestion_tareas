@@ -273,6 +273,7 @@ function configurarEventListeners() {
   document.getElementById('filter-estado').addEventListener('change', filtrarActividades);
   document.getElementById('filter-mes').addEventListener('change', filtrarActividades);
   document.getElementById('filter-tipo').addEventListener('change', filtrarActividades);
+  document.getElementById('btn-limpiar-filtros').addEventListener('click', limpiarFiltros);
 
   // Modales
   document.querySelectorAll('.modal-close').forEach(btn => {
@@ -339,13 +340,7 @@ async function cargarActividades() {
 
     actividades = data.data;
     renderizarResumenDashboard(actividades);
-
-    if (actividades.length === 0) {
-      noActividades.style.display = 'block';
-    } else {
-      noActividades.style.display = 'none';
-      renderizarActividades(actividades);
-    }
+    filtrarActividades();
 
     // Si la pestaña del calendario está activa, re-renderizar para reflejar los datos
     const calTab = document.getElementById('calendario');
@@ -797,7 +792,27 @@ function filtrarActividades() {
     filtradas = filtradas.filter(a => a.tipo === filtroTipo);
   }
 
-  renderizarActividades(filtradas);
+  const noActividades = document.getElementById('no-actividades');
+  const listaContainer = document.getElementById('actividades-list');
+
+  if (filtradas.length === 0) {
+    listaContainer.innerHTML = '';
+    noActividades.style.display = 'block';
+    noActividades.querySelector('p').textContent =
+      actividades.length === 0
+        ? '📭 No hay actividades programadas'
+        : '🔍 No hay actividades que coincidan con los filtros seleccionados';
+  } else {
+    noActividades.style.display = 'none';
+    renderizarActividades(filtradas);
+  }
+}
+
+function limpiarFiltros() {
+  document.getElementById('filter-estado').value = 'Activa';
+  document.getElementById('filter-mes').value = '';
+  document.getElementById('filter-tipo').value = '';
+  filtrarActividades();
 }
 
 // ==================== PERSONAS ====================
@@ -1105,3 +1120,4 @@ window.eliminarActividad = eliminarActividad;
 window.editarPersona = editarPersona;
 window.eliminarPersona = eliminarPersona;
 window.renderizarParticipantesEdicion = renderizarParticipantesEdicion;
+window.limpiarFiltros = limpiarFiltros;

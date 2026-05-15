@@ -47,7 +47,7 @@ class SheetsService {
       id: row[0],
       titulo: row[1],
       fecha_inicio: row[2],
-      hora_inicio: row[3],
+      hora_inicio: this.normalizarHora(row[3]),
       duracion_min: row[4],
       participantes: row[5] ? row[5].split(', ') : [],
       descripcion: row[6],
@@ -56,7 +56,7 @@ class SheetsService {
       creado_por: row[9],
       fecha_creacion: row[10],
       fecha_fin: row[11] || row[2],
-      hora_fin: row[12] || row[3],
+      hora_fin: this.normalizarHora(row[12]) || this.normalizarHora(row[3]),
       tipo: row[13] || ''
     }));
   }
@@ -76,7 +76,7 @@ class SheetsService {
       id,
       datos.titulo || actividad.titulo,
       datos.fecha_inicio || actividad.fecha_inicio,
-      datos.hora_inicio || actividad.hora_inicio,
+      datos.hora_inicio !== undefined ? datos.hora_inicio : actividad.hora_inicio,
       datos.duracion_min || actividad.duracion_min,
       datos.participantes ? datos.participantes.join(', ') : actividad.participantes.join(', '),
       datos.descripcion !== undefined ? datos.descripcion : actividad.descripcion,
@@ -84,8 +84,8 @@ class SheetsService {
       actividad.eventId,
       actividad.creado_por,
       actividad.fecha_creacion,
-      datos.fecha_fin || actividad.fecha_fin || actividad.fecha_inicio,
-      datos.hora_fin || actividad.hora_fin || actividad.hora_inicio,
+      datos.fecha_fin !== undefined ? datos.fecha_fin : (actividad.fecha_fin || actividad.fecha_inicio),
+      datos.hora_fin !== undefined ? datos.hora_fin : (actividad.hora_fin || actividad.hora_inicio),
       datos.tipo !== undefined ? datos.tipo : (actividad.tipo || '')
     ]];
 
@@ -180,6 +180,24 @@ class SheetsService {
     });
 
     return actividad;
+  }
+
+  normalizarHora(valor) {
+    // Google Sheets con USER_ENTERED guarda "00:00" como el número 0
+    // (las horas se almacenan como fracción decimal de 24h: medianoche = 0)
+    if (valor === '' || valor === null || valor === undefined) return '';
+    if (typeof valor === 'number') {
+      const totalMinutos = Math.round(valor * 24 * 60);
+      const hh = Math.floor(totalMinutos / 60) % 24;
+      const mm = totalMinutos % 60;
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
+    // Normalizar formatos como "8:05" → "08:05"
+    const match = String(valor).trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      return `${String(parseInt(match[1], 10)).padStart(2, '0')}:${match[2]}`;
+    }
+    return String(valor);
   }
 
   generarId() {
